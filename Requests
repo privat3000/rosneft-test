@@ -1,0 +1,54 @@
+SELECT s.*, ISNULL(t.NAME, '-') as tarrif_name FROM subscriber_tarrif st
+JOIN tarrif_plan t ON st.TARRIF = t.ID
+RIGHT OUTER JOIN subscriber s ON st.SUBSCRIBER = s.ID
+
+SELECT s.FIRST_NAME as subscriber_name, s.LAST_NAME as subscriber_last_name, s.SECOND_NAME as subscriber_second_name,
+d.MODEL as device_model, d.PRICE_PER_MOTH as device_price, sd.DATE_ACTIVE_FROM as date_active_from, sd.DATE_ACTIVE_TO as date_acrive_to
+FROM subscriber_devices sd
+JOIN devices_types d ON sd.DEVICE = d.ID
+JOIN subscriber s ON sd.SUBSCRIBER = s.ID 
+WHERE sd.DATE_ACTIVE_FROM <= '2021-11-16'  and sd.DATE_ACTIVE_TO >= '2021-11-16' and s.LAST_NAME LIKE '%%'
+ORDER BY d.PRICE_PER_MOTH desc
+
+SELECT TOP(5) t.NAME as tarrif_name, t.CONNECTION_SPEED as tarrif_connection_speed, t.PRICE_PER_MONTH as price_tarrif,
+COUNT(st.SUBSCRIBER) as count_subscribers 
+FROM subscriber_tarrif as st
+JOIN tarrif_plan t ON st.TARRIF = t.ID
+GROUP BY st.TARRIF, t.NAME, t.CONNECTION_SPEED, t.PRICE_PER_MONTH
+ORDER BY count_subscribers desc
+
+SELECT sub.ID, sub.FIRST_NAME as subscriber_name, sub.LAST_NAME as subscriber_last_name, sub.SECOND_NAME as subscriber_second_name,
+t.PRICE_PER_MONTH + s.PRICE_PER_MONTH + d.PRICE_PER_MONTH as sum_spent FROM subscriber sub
+LEFT JOIN subscriber_tarrif st ON sub.ID = st.SUBSCRIBER
+LEFT JOIN subscriber_devices sd ON sub.ID = sd.SUBSCRIBER
+LEFT JOIN subscriber_services ss ON sub.ID = ss.SUBSCRIBER
+JOIN tarrif_plan t ON st.TARRIF = t.ID
+JOIN devices_types d ON sd.DEVICE = d.ID
+JOIN services s ON ss.SERVICE = s.ID
+WHERE sd.DATE_ACTIVE_FROM <= '2021-11-16' and sd.DATE_ACTIVE_TO >= '2021-11-16'
+and ss.DATE_ACTIVE_FROM <= '2021-11-16' and ss.DATE_ACTIVE_TO >= '2021-11-16'
+and st.ACTIVE = 1
+GROUP BY sub.ID, sub.FIRST_NAME, sub.LAST_NAME, sub.SECOND_NAME, t.PRICE_PER_MONTH, d.PRICE_PER_MONTH, s.PRICE_PER_MONTH
+
+SELECT t.PRICE_PER_MONTH + s.PRICE_PER_MONTH + d.PRICE_PER_MONTH as sum_spent FROM provider p
+JOIN tarrif_plan t ON t.PROVIDER = p.ID
+JOIN devices_types d ON d.PROVIDER = p.ID
+JOIN services s ON s.PROVIDER = p.ID
+LEFT JOIN subscriber_tarrif st ON t.ID = st.TARRIF
+LEFT JOIN subscriber_devices sd ON d.ID = sd.DEVICE
+LEFT JOIN subscriber_services ss ON s.ID = ss.SUBSCRIBER
+WHERE sd.DATE_ACTIVE_FROM <= '2021-11-16' and sd.DATE_ACTIVE_TO >= '2021-11-16'
+and ss.DATE_ACTIVE_FROM <= '2021-11-16' and ss.DATE_ACTIVE_TO >= '2021-11-16'
+and st.ACTIVE = 1
+GROUP BY st.SUBSCRIBER, sd.SUBSCRIBER, ss.SUBSCRIBER, t.PRICE_PER_MONTH, d.PRICE_PER_MONTH, s.PRICE_PER_MONTH
+
+SELECT sub.FIRST_NAME, sub.LAST_NAME, sub.SECOND_NAME, MAX(t.CONNECTION_SPEED) AS MAX_CONNECTION_SPEED FROM subscriber_tarrif st
+LEFT JOIN tarrif_plan t ON st.TARRIF = t.ID
+right JOIN subscriber sub ON st.SUBSCRIBER = sub.ID
+WHERE sub.CITY LIKE '%Korisos%'
+GROUP BY sub.FIRST_NAME, sub.LAST_NAME, sub.SECOND_NAME
+
+SELECT sub.FIRST_NAME, sub.LAST_NAME, sub.SECOND_NAME, sub.ACCOUNT_NUMBER, sub.CITY, sub.ADRESS, COUNT(ss.SUBSCRIBER) as COUNT_SUBSCRIBER_SERVICES FROM subscriber_services ss
+JOIN subscriber sub ON ss.SUBSCRIBER = sub.ID
+WHERE ss.DATE_ACTIVE_FROM <= '2021-11-16' and ss.DATE_ACTIVE_TO >= '2021-11-16'
+GROUP BY sub.FIRST_NAME, sub.LAST_NAME, sub.SECOND_NAME, sub.ACCOUNT_NUMBER, sub.CITY, sub.ADRESS
