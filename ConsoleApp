@@ -35,9 +35,9 @@ int main(int argc, char *argv[])
     db.setUserName("priva");
        if (!db.open())
        {
-           qDebug() << "драсте";
+           qDebug() << "не подключилась";
        }
-       qDebug() << "забор покрасте";
+       qDebug() << "подключилась";
 
 
 
