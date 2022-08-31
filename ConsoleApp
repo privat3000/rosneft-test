@@ -1,151 +1,336 @@
-#include <QCoreApplication>
-#include <QLocale>
-#include <QTranslator>
-#include <QSqlDatabase>
-#include <QSqlQuery>
-#include <QTableView>
-#include <QSqlQueryModel>
-#include <QSqlRelationalTableModel>
-#include <QObject>
-#include <QApplication>
-#include <QtSql/QSqlRecord>
-#include <QDate>
-#include <QSqlError>
-#include <iostream>
+using System;
+using System.Diagnostics;
+using System.Reflection.PortableExecutable;
+using System.Xml.Linq;
+using Microsoft.Data.Sqlite;
+using Microsoft.EntityFrameworkCore.Query.Internal;
+using System.IO;
+using System.Linq.Expressions;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
-using namespace std;
-
-int main(int argc, char *argv[])
+namespace HelloApp
 {
-    QApplication app(argc, argv);
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            Console.Write
+               ("Введите цифру нужного запроса \n" +
+               "1. Информацию обо всех абонентах и наименование тарифного плана, на котором находится каждый из них \n" +
+               "2. Арендованные устройства у заданных абонентов \n" +
+               "3. ТОП5 тарифов по количеству абонентов на каждом тарифном плане \n" +
+               "4. Суммарные ежемесячные затраты каждого из абонентов на указанную дату \n" +
+               "5. Все абоненты в заданном городе с самой высокой скоростью подключения к сети Интернет \n" +
+               "6. Количество подключенных на текущий день услуг у каждого абонента \n" +
+               "7. Операции CRUD \n\n");
 
-    QTranslator translator;
-    const QStringList uiLanguages = QLocale::system().uiLanguages();
-    for (const QString &locale : uiLanguages) {
-        const QString baseName = "untitled_" + QLocale(locale).name();
-        if (translator.load(":/i18n/" + baseName)) {
-            app.installTranslator(&translator);
-            break;
+            string number = Console.ReadLine();
+            switch (number)
+            {
+                case "1":
+                    try
+                    {
+                        StreamWriter sw = new StreamWriter("C:\\Users\\priva\\Desktop\\rezult.txt");
+                        string sqlExpression = "SELECT s.*, case when st.ACTIVE = 0 then '-' ELSE t.NAME end AS tarrif_name FROM subscriber_tarrif st JOIN tarrif_plan t ON st.TARRIF = t.ID LEFT JOIN subscriber s ON st.SUBSCRIBER = s.ID;";
+                        using (var connection = new SqliteConnection("Data Source=C:\\Users\\priva\\Desktop\\Providers.db; Mode=ReadWrite; Foreign Keys=True; "))
+                        {
+                            connection.Open();
+
+                            SqliteCommand command = new SqliteCommand(sqlExpression, connection);
+                            using (SqliteDataReader reader = command.ExecuteReader())
+                            {
+                                if (reader.HasRows)
+                                {
+                                    sw.WriteLine("\n|ID; \t| AccountNumber; \t| First_Name; \t| Last_Name; \t| Second_Name; \t| Birthday; \t|\t City; \t\t|\t Adress; \t|\t tarrif_name; \t| \n");
+                                    while (reader.Read())
+                                    {
+                                        var ID = reader.GetValue(0);
+                                        var AccountNumber = reader.GetValue(1);
+                                        var First_Name = reader.GetValue(2);
+                                        var Last_Name = reader.GetValue(3);
+                                        var Second_Name = reader.GetValue(4);
+                                        var Birthday = reader.GetValue(5);
+                                        var City = reader.GetValue(6);
+                                        var Adress = reader.GetValue(7);
+                                        var tarrif_name = reader.GetValue(8);
+                                        sw.WriteLine($"|{ID}; \t| {AccountNumber}; \t| {First_Name}; \t| {Last_Name}; \t| {Second_Name}; \t| {Birthday}; \t| {City}; \t\t|\t {Adress}; \t|\t {tarrif_name}; \t|");
+                                    }
+                                }
+                            }
+                        }
+                        sw.Close();
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine("Exception: " + e.Message);
+                    }
+                        Console.Read();
+
+                    break;
+                case "2":
+                    Console.WriteLine("Введите Фамилию \n");
+                    string name = Console.ReadLine();
+                    string sqlExpression1 = $"SELECT s.FIRST_NAME as subscriber_name, s.LAST_NAME as subscriber_last_name, s.SECOND_NAME as subscriber_second_name,\r\nd.MODEL as device_model, d.PRICE_PER_MONTH as device_price, sd.DATE_ACTIVE_FROM as date_active_from, sd.DATE_ACTIVE_TO as date_acrive_to\r\nFROM subscriber_devices AS sd\r\nJOIN devices_types AS d ON sd.DEVICE = d.ID\r\nJOIN subscriber AS s ON sd.SUBSCRIBER = s.ID \r\nWHERE sd.DATE_ACTIVE_FROM <= '2021-11-16' AND sd.DATE_ACTIVE_TO >= '2021-11-16' AND s.LAST_NAME LIKE '%{name}%'\r\nORDER BY d.PRICE_PER_MONTH DESC;";
+                    using (var connection = new SqliteConnection("Data Source=C:\\Users\\priva\\Desktop\\Providers.db; Mode=ReadWrite; Foreign Keys=True; "))
+                    {
+                        connection.Open();
+
+                        SqliteCommand command = new SqliteCommand(sqlExpression1, connection);
+                        using (SqliteDataReader reader = command.ExecuteReader())
+                        {
+                            if (reader.HasRows)
+                            {
+                                Console.WriteLine("\n|Name; | Last_Name; | Second_Name; | Model; | Price; | Date_from; | Date_to; |\n");
+                                while (reader.Read())
+                                {
+                                    var Name = reader.GetValue(0);
+                                    var Last_Name = reader.GetValue(1);
+                                    var Second_Name = reader.GetValue(2);
+                                    var Model = reader.GetValue(3);
+                                    var Price = reader.GetValue(4);
+                                    var Date_from = reader.GetValue(5);
+                                    var Date_to = reader.GetValue(6);
+                                    Console.WriteLine($"\n| {Name}; | {Last_Name}; \t| {Second_Name}; | {Model}; | {Price}; \t| {Date_from}; \t| {Date_to}; |\n");
+                                }
+                            }
+                        }
+                    }
+                    Console.Read();
+                    break;
+                case "3":
+                    string sqlExpression2 = $"SELECT t.NAME as tarrif_name, t.CONNECTION_SPEED as tarrif_connection_speed, t.PRICE_PER_MONTH as price_tarrif,\r\nCOUNT(st.SUBSCRIBER) as count_subscribers \r\nFROM subscriber_tarrif as st\r\nJOIN tarrif_plan t ON st.TARRIF = t.ID\r\nGROUP BY st.TARRIF, t.NAME\r\nORDER BY count_subscribers desc\r\nLIMIT 5;";
+                    using (var connection = new SqliteConnection("Data Source=C:\\Users\\priva\\Desktop\\Providers.db; Mode=ReadWrite; Foreign Keys=True; "))
+                    {
+                        connection.Open();
+
+                        SqliteCommand command = new SqliteCommand(sqlExpression2, connection);
+                        using (SqliteDataReader reader = command.ExecuteReader())
+                        {
+                            if (reader.HasRows)
+                            {
+                                Console.WriteLine("\n|T.Name; | Connection speed; | Tarif_Price; | Count; |\n");
+                                while (reader.Read())
+                                {
+                                    var T_Name = reader.GetValue(0);
+                                    var Connection_speed = reader.GetValue(1);
+                                    var Tarif_Price = reader.GetValue(2);
+                                    var Count = reader.GetValue(3);
+                                    Console.WriteLine($"\n|{T_Name}; | {Connection_speed}; | {Tarif_Price}; | {Count}; |\n");
+                                }
+                            }
+                        }
+                    }
+                    Console.Read();
+                    break;
+                /* case "4":
+                     string sqlExpression3 = $"(SELECT sub.*, (SELECT t.PRICE_PER_MONTH FROM subscriber_tarrif AS st\r\n        JOIN tarrif_plan AS t ON t.ID = st.TARRIF\r\n        WHERE ACTIVE = 1 AND SUBSCRIBER = sub.ID) AS SUM_SPENT_tar FROM subscriber AS sub;";
+                     string sqlExpression4 = $"(SELECT sub.*, (SELECT d.PRICE_PER_MONTH FROM subscriber_devices AS sd\r\n        JOIN devices_types AS d ON d.ID = sd.DEVICE\r\n        WHERE SUBSCRIBER = sub.ID AND\r\n        DATE_ACTIVE_FROM <= '2021-11-16'\r\n        AND DATE_ACTIVE_TO >= '2021-11-16') AS SUM_SPENT_dev FROM subscriber AS sub;";
+                     string sqlExpression5 = $"(SELECT sub.*, (SELECT s.PRICE_PER_MONTH FROM subscriber_services AS ss\r\n         JOIN services AS s ON s.ID = ss.SERVICE\r\n         WHERE SUBSCRIBER = sub.ID AND\r\n         DATE_ACTIVE_FROM <= '2021-11-16'AND \r\n         DATE_ACTIVE_TO >= '2021-11-16') AS SUM_SPENT_ser FROM subscriber AS sub;";
+                     string price_per_month = "SUM_SPENT_tar" + "SUM_SPENT_dev" + "SUM_SPENT_ser";
+                     using (var connection = new SqliteConnection("Data Source=C:\\Users\\priva\\Desktop\\Providers.db; Mode=ReadWrite; Foreign Keys=True; "))
+                     {
+                         connection.Open();
+
+                         SqliteCommand command = new SqliteCommand(sqlExpression3, connection);
+                         SqliteCommand command1 = new SqliteCommand(sqlExpression4, connection);
+                         SqliteCommand command2 = new SqliteCommand(sqlExpression5, connection);
+                         using (SqliteDataReader reader = command.ExecuteReader())
+                         using (SqliteDataReader reader1 = command1.ExecuteReader())
+                         using (SqliteDataReader reader2 = command2.ExecuteReader())
+                         {
+                             if (reader.HasRows)
+                             {
+                                 if (reader1.HasRows)
+                                 {
+                                     if (reader2.HasRows)
+                                     {
+                                         Console.WriteLine("\n|T.Name; | Connection speed; | Tarif_Price; | Count; |\n");
+                                         while (reader.Read())
+                                         {
+                                             int price2 = Convert.ToInt32(reader.GetValue(7));
+                                             while (reader1.Read())
+                                             {
+                                                 int price1 = Convert.ToInt32(reader.GetValue(7));
+                                                 while (reader2.Read())
+                                                 {
+                                                     var ID = reader.GetValue(0);
+                                                     var First_Name = reader.GetValue(1);
+                                                     var Last_Name = reader.GetValue(2);
+                                                     var Second_Name = reader.GetValue(3);
+                                                     var Birthday = reader.GetValue(4);
+                                                     var City = reader.GetValue(5);
+                                                     var Adress = reader.GetValue(6);
+                                                     int price = Convert.ToInt32(reader.GetValue(7));
+                                                     Console.WriteLine($"|{ID}; \t| {First_Name}; \t| {Last_Name}; \t| {Second_Name}; \t| {Birthday}; \t| {City}; \t\t|\t {Adress}; \t|\t {price + price1 + price2} \t|");
+                                                 }
+                                             }
+                                         }
+                                     }
+                                 }
+                             }
+                         }
+                     }
+                     Console.Read();
+                     break;
+                */
+                case "5":
+                    {
+                        Console.WriteLine("Введите Город \n");
+                        string city = Console.ReadLine();
+                        string sqlExpression3 = $"SELECT sub.FIRST_NAME, sub.LAST_NAME, sub.SECOND_NAME,MAX(t.CONNECTION_SPEED) AS MAX_CONNECTION_SPEED\r\nFROM subscriber_tarrif st\r\nLEFT JOIN tarrif_plan t ON st.TARRIF = t.ID\r\nLEFT JOIN subscriber sub ON st.SUBSCRIBER = sub.ID\r\nWHERE sub.CITY LIKE '%{city}%'\r\nGROUP BY sub.FIRST_NAME;";
+                        using (var connection = new SqliteConnection("Data Source=C:\\Users\\priva\\Desktop\\Providers.db; Mode=ReadWrite; Foreign Keys=True; "))
+                        {
+                            connection.Open();
+
+                            SqliteCommand command = new SqliteCommand(sqlExpression3, connection);
+                            using (SqliteDataReader reader = command.ExecuteReader())
+                            {
+                                if (reader.HasRows)
+                                {
+                                    Console.WriteLine("\n|Name; | Last_Name; | Second_Name; | Connection_speed; |\n");
+                                    while (reader.Read())
+                                    {
+                                        var Name = reader.GetValue(0);
+                                        var Last_Name = reader.GetValue(1);
+                                        var Second_Name = reader.GetValue(2);
+                                        var Connection_speed = reader.GetValue(3);
+                                        Console.WriteLine($"\n|{Name}; | {Last_Name}; | {Second_Name}; | {Connection_speed}; |\n");
+                                    }
+                                }
+                            }
+                        }
+                        Console.Read();
+                    }
+                    break;
+                case "6":
+                    {
+                        string sqlExpression4 = $"SELECT sub.FIRST_NAME, sub.LAST_NAME, sub.SECOND_NAME, sub.ACCOUNT_NUMBER, sub.CITY, sub.ADRESS,\r\nCOUNT(ss.SUBSCRIBER) as COUNT_SUBSCRIBER_SERVICES FROM subscriber_services ss\r\nLEFT JOIN subscriber sub ON ss.SUBSCRIBER = sub.ID\r\nWHERE ss.DATE_ACTIVE_FROM <= '2021-11-16' and ss.DATE_ACTIVE_TO >= '2021-11-16'\r\nGROUP BY sub.FIRST_NAME\r\nORDER BY COUNT_SUBSCRIBER_SERVICES DESC";
+                        using (var connection = new SqliteConnection("Data Source=C:\\Users\\priva\\Desktop\\Providers.db; Mode=ReadWrite; Foreign Keys=True; "))
+                        {
+                            connection.Open();
+
+                            SqliteCommand command = new SqliteCommand(sqlExpression4, connection);
+                            using (SqliteDataReader reader = command.ExecuteReader())
+                            {
+                                if (reader.HasRows)
+                                {
+                                    Console.WriteLine("\n|Name; | Last_Name; | Second_Name; | AccountNumber; | City; | Adress; | Count; | \n");
+                                    while (reader.Read())
+                                    {
+                                        var Name = reader.GetValue(0);
+                                        var Last_Name = reader.GetValue(1);
+                                        var Second_Name = reader.GetValue(2);
+                                        var AccountNumber = reader.GetValue(3);
+                                        var City = reader.GetValue(4);
+                                        var Adress = reader.GetValue(5);
+                                        var Count = reader.GetValue(6);
+                                        Console.WriteLine($"\n|{Name}; | {Last_Name}; | {Second_Name}; | {AccountNumber}; \t| {City}; \t\t|\t {Adress}; \t|\t {Count}; \t| \n");
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    Console.Read();                    
+                    break;
+                case "7":
+                    {
+                        Console.Write
+                            ("Выберите действие которое вы хотите совершить \n" +
+                            "Добавить таблицу \n" +
+                            "Внести данные \n" +
+                            "Изменить таблицу \n" +
+                            "Удалить таблицу \n");
+                        string choose = Console.ReadLine();
+                        switch (choose)
+                        {
+                            case "Добавить таблицу":
+                                {
+                                    Console.Write("\n Введите название таблицы \n");
+                                    string name1 = Console.ReadLine();
+                                    Console.Write("\n Введите название столбцов и их параметры \n");
+                                    string colons = Console.ReadLine();
+                                    using (var connection = new SqliteConnection("Data Source=C:\\Users\\priva\\Desktop\\Providers.db; Mode=ReadWrite; Foreign Keys=True; "))
+                                    {
+                                        connection.Open();
+                                        SqliteCommand command = new SqliteCommand();
+                                        command.Connection = connection;
+                                        command.CommandText = $"CREATE TABLE {name1}({colons})";
+                                        command.ExecuteNonQuery();
+                                        Console.WriteLine($"Таблица {name1} создана");
+                                    }
+                                    Console.Read();
+                                }
+                                break;
+                            case "Внести данные":
+                                {
+                                    Console.Write("Введите название таблицы\n");
+                                    string name1 = Console.ReadLine();
+                                    Console.Write("Введите название столбцов\n");
+                                    string colons = Console.ReadLine();
+                                    Console.Write("Введите значения столбцов\n");
+                                    string values = Console.ReadLine();
+                                    using (var connection = new SqliteConnection("Data Source=C:\\Users\\priva\\Desktop\\Providers.db; Mode=ReadWrite; Foreign Keys=True; "))
+                                    {
+                                        connection.Open();
+
+                                        SqliteCommand command = new SqliteCommand();
+                                        command.Connection = connection;
+                                        command.CommandText = $"INSERT INTO {name1} ({colons}) VALUES ({values})";
+                                        int number2 = command.ExecuteNonQuery();
+
+                                        Console.WriteLine($"В таблицу Users добавлено объектов: {number2}\n");
+                                    }
+                                    Console.Read();
+                                }
+                                break;
+                            case "Изменить таблицу":
+                                {
+                                    Console.Write("Введите название таблицы\n");
+                                    string name1 = Console.ReadLine();
+                                    Console.Write("Введите измениемое значение\n");
+                                    string colons = Console.ReadLine();
+                                    Console.Write("Введите способ нахождения значения\n");
+                                    string values = Console.ReadLine();
+                                    string sqlExpression = $"UPDATE {name1} SET {colons} WHERE {values}";
+                                    using (var connection = new SqliteConnection("Data Source=C:\\Users\\priva\\Desktop\\Providers.db; Mode=ReadWrite; Foreign Keys=True; "))
+                                    {
+                                        connection.Open();
+
+                                        SqliteCommand command = new SqliteCommand(sqlExpression, connection);
+
+                                        int number2 = command.ExecuteNonQuery();
+
+                                        Console.WriteLine($"Обновлено объектов: {number2}\n");
+                                    }
+                                    Console.Read();
+                                }
+                                break;
+                            case "Удалить таблицу":
+                                {
+                                    Console.Write("Введите название таблицы\n");
+                                    string name1 = Console.ReadLine();
+                                    Console.Write("\nВведите способ нахождения значения\n");
+                                    string values = Console.ReadLine();
+                                    string sqlExpression = $"\nDELETE  FROM {name1} WHERE {values}\n";
+                                    using (var connection = new SqliteConnection("Data Source=C:\\Users\\priva\\Desktop\\Providers.db; Mode=ReadWrite; Foreign Keys=True; "))
+                                    {
+                                        connection.Open();
+
+                                        SqliteCommand command = new SqliteCommand(sqlExpression, connection);
+
+                                        int number2 = command.ExecuteNonQuery();
+
+                                        Console.WriteLine($"Удалено объектов: {number2}\n");
+                                    }
+                                    Console.Read();
+                                }
+                                break;
+
+                        }
+                    }
+                    break;
+            
+            }
         }
     }
-
-    QSqlDatabase db = QSqlDatabase::addDatabase("QODBC");
-    db.setDatabaseName("privat_desktop");
-    db.setHostName("localhost");
-    db.setUserName("priva");
-       if (!db.open())
-       {
-           qDebug() << "не подключилась";
-       }
-       qDebug() << "подключилась";
-
-
-
-//       QSqlQuery query;
-
-//         query.exec("SELECT s.*, ISNULL(t.NAME, '-') as tarrif_name FROM subscriber_tarrif st"
-//                     "JOIN tarrif_plan t ON st.TARRIF = t.ID"
-//                     "RIGHT OUTER JOIN subscriber s ON st.SUBSCRIBER = s.ID");
-
-//       QSqlTableModel model = QSqlTableModel(0, db);
-//       model.setTable("subscriber");          // Имя таблицы базы данных.
-//       model.select();
-
-//        QTableView view;
-//        view.setModel(&model);
-//        view.show();
-
-//        QSqlQuery query1 = QSqlQuery ();
-//                       if (!query1.exec("SELECT ACCOUNT_NUMBER, FIRST_NAME, SECOND_NAME, BIRTHDAY, CITY, ADRESS FROM subscriber;")) {
-//                              qDebug() << "error SELECT";
-//                              qDebug() << query1.lastError().text();
-
-
-//                          }else{
-
-//                       QSqlRecord rec     = query1.record();
-
-//                           QString    strACCOUNT_NUMBER;
-//                           QString    strFIRST_NAME;
-//                           QString    strLAST_NAME;
-//                           QString    strSECOND_NAME;
-//                           QDate      Birthday;
-//                           QString    strCity;
-//                           QString    strAdress;
-//                          // QString    strtarrif_name;
-
-//                           while (query1.next()) {
-
-//                               strACCOUNT_NUMBER  = query1.value(rec.indexOf("ACCOUNT_NUMBER")).toString();
-//                               strFIRST_NAME = query1.value(rec.indexOf("FIRST_NAME")).toString();
-//                               strLAST_NAME = query1.value(rec.indexOf("LAST_NAME")).toString();
-//                               strSECOND_NAME = query1.value(rec.indexOf("SECOND_NAME")).toString();
-//                               Birthday = query1.value(rec.indexOf("BIRTHDAY")).toDate();
-//                               strCity = query1.value(rec.indexOf("CITY")).toString();
-//                               strAdress = query1.value(rec.indexOf("ADRESS")).toString();
-//                              // strtarrif_name = query1.value(rec.indexOf("tarrif_name")).toString();
-
-//                               qDebug() << strACCOUNT_NUMBER << " " << strFIRST_NAME << ";\t"
-//                                        << strLAST_NAME << ";\t" << strSECOND_NAME
-//                                        << Birthday << ";\t" << strCity
-//                                        << strAdress; //<< ";\t" << strtarrif_name;
-//                           }
-//                    }
-
-
-       if (!db.open()){
-               cout << "error" << endl;
-             }
-           else {
-               cout << "Success" << endl;
-
-               QSqlQuery query = QSqlQuery ();
-
-              if(!query.exec("CREATE TABLE IF NOT EXISTS test"
-                          " ( id int GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY, name varchar, "
-                          "bithday date, gender varchar)")){
-                cout << "error table" << endl; }
-                else {
-                    cout << "Success table" << endl;
-
-                    if(!query.exec("INSERT INTO public.test( "
-                                       "name,bithday, gender) "
-                                          "VALUES ('anton','1996-12-23','man');")){
-
-                     cout << "error INSERT" << endl;
-                    } else {
-                        cout << "Success INSERT" << endl;
-         QSqlQuery query1 = QSqlQuery ();
-                        if (!query1.exec("SELECT * FROM test;")) {
-                               qDebug() << "error SELECT";
-
-
-                           }else{
-
-                        QSqlRecord rec     = query1.record();
-                            int        id = 1;
-                            QString    strName;
-                            QDate    strBithday;
-                            QString    strGender;
-
-                            while (query1.next()) {
-                                id  = query1.value(rec.indexOf("id")).toInt();
-                                strName  = query1.value(rec.indexOf("name")).toString();
-                                strBithday = query1.value(rec.indexOf("bithday")).toDate();
-                                strGender = query1.value(rec.indexOf("gender")).toString();
-
-                                qDebug() << id << " " << strName << ";\t"
-                                         << strBithday << ";\t" << strGender;
-                            }
-
-                        }
-
-
-                        }
-
-                    }
-
-                }
-    return app.exec();
-
 }
