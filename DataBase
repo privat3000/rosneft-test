@@ -1,13 +1,12 @@
-USE Providers;
 CREATE TABLE provider
 (
-	ID int PRIMARY KEY IDENTITY (1,1),
-	NAME VARCHAR(255) NOT NULL UNIQUE,
+	ID int PRIMARY KEY AUTOINCREMENT,
+	NAME VARCHAR(255) NOT NULL UNIQUE
 );
 
 CREATE TABLE tarrif_plan
 (
-	ID INT PRIMARY KEY IDENTITY(1,1),
+	ID INT PRIMARY KEY AUTOINCREMENT,
 	NAME VARCHAR(255) NOT NULL,
 	PRICE_PER_MONTH float,
 	CONNECTION_SPEED int,
@@ -20,7 +19,7 @@ CREATE TABLE tarrif_plan
 
 CREATE TABLE services
 (
-	ID int PRIMARY KEY IDENTITY(1,1),
+	ID int PRIMARY KEY AUTOINCREMENT,
 	NAME varchar(255) NOT NULL,
 	DESCRIPTION text,
 	PRICE_PER_MONTH float,
@@ -33,7 +32,7 @@ CREATE TABLE services
 
 CREATE TABLE devices_types
 (
-	ID int PRIMARY KEY IDENTITY(1,1),
+	ID int PRIMARY KEY AUTOINCREMENT,
 	MODEL varchar(255) NOT NULL,
 	PRICE_PER_MONTH float,
 	DESCRIPTION text,
@@ -46,7 +45,7 @@ CREATE TABLE devices_types
 
 CREATE TABLE subscriber
 (
-	ID int PRIMARY KEY IDENTITY(1,1),
+	ID int PRIMARY KEY AUTOINCREMENT,
 	ACCOUNT_NUMBER char(20),
 	FIRST_NAME varchar(25) NOT NULL,
 	LAST_NAME varchar(25) NOT NULL,
@@ -58,7 +57,7 @@ CREATE TABLE subscriber
 
 CREATE TABLE subscriber_tarrif
 (
-	ID int PRIMARY KEY IDENTITY(1,1),
+	ID int PRIMARY KEY AUTOINCREMENT,
 	TARRIF int,
 	SUBSCRIBER int,
 	ACTIVE bit,
@@ -69,12 +68,12 @@ CREATE TABLE subscriber_tarrif
 	
 	CONSTRAINT fk_suscriber_tarrif_to_subscriber FOREIGN KEY(SUBSCRIBER) REFERENCES subscriber(ID)
 	ON DELETE CASCADE
-	ON UPDATE CASCADE,
+	ON UPDATE CASCADE
 );
 
 CREATE TABLE subscriber_services
 (
-	ID int PRIMARY KEY IDENTITY(1,1),
+	ID int PRIMARY KEY AUTOINCREMENT,
 	SERVICE int,
 	SUBSCRIBER int,
 	DATE_ACTIVE_FROM date,
@@ -86,12 +85,12 @@ CREATE TABLE subscriber_services
 
 	CONSTRAINT fk_subscriber_service_to_subscriber FOREIGN KEY(SUBSCRIBER) REFERENCES subscriber(ID)
 	ON DELETE CASCADE
-	ON UPDATE CASCADE,
+	ON UPDATE CASCADE
 );
 
 CREATE TABLE subscriber_devices
 (
-	ID int PRIMARY KEY IDENTITY(1,1),
+	ID int PRIMARY KEY AUTOINCREMENT,
 	DEVICE int,
 	SUBSCRIBER int,
 	DATE_ACTIVE_FROM date,
@@ -103,11 +102,11 @@ CREATE TABLE subscriber_devices
 
 	CONSTRAINT fk_subscriber_devices_to_subscriber FOREIGN KEY(SUBSCRIBER) REFERENCES subscriber(ID)
 	ON DELETE CASCADE
-	ON UPDATE CASCADE,
+	ON UPDATE CASCADE
 );
 
 
-INSERT provider 
+/*INSERT INTO provider (NAME)
 VALUES
 ('Билайн'),
 ('Дом.ру'),
@@ -119,8 +118,7 @@ VALUES
 ('Транстелеком'),
 ('Интертелеком'),
 ('Byfly');
-
-INSERT tarrif_plan 
+INSERT INTO tarrif_plan (NAME, PRICE_PER_MONTH, CONNECTION_SPEED, PROVIDER)
 VALUES
 ('Все дома','8.17','295','2'),
 ('Суперсвязь','3.24','88','3'),
@@ -132,8 +130,7 @@ VALUES
 ('Связь+','7.17','276','4'),
 ('Все в одном','9.36','259','6'),
 ('Телевизор','5.88','291','10');
-
-INSERT services
+INSERT INTO services (NAME, DESCRIPTION, PRICE_PER_MONTH, PROVIDER)
 VALUES
 ('Ночное кино','Открывает доступ к фильм каналам с 23.00 до 8.00','7.03','6'),
 ('+5 ГБ','Добавляет 5 гб трафика к имеющемуся тарифу','10.56','5'),
@@ -145,8 +142,7 @@ VALUES
 ('Все тв','Открывает доступ ко всем каналом','14.67','9'),
 ('Быстрее всех','Увеличивает скорость до 300 Мбит.с','11.15','1'),
 ('Детский','Открывает доступ к детским каналам','8.61','2' );
-
-INSERT devices_types 
+INSERT INTO devices_types (MODEL, PRICE_PER_MONTH, DESCRIPTION, PROVIDER)
 VALUES 
 ('роутер 1','50','Роутер до 50 Мбит.с','4'),
 ('Тв приставка(смарт)','100','ТВ приставка работающая от кабеля Ethernet','2'),
@@ -157,22 +153,20 @@ VALUES
 ('тв приставка 3','200','ТВ приставка работающая от модема','2'),
 ('модем 1','50','Модем с доступом в интернет со скоростью 100 Мбит.с','10'),
 ('роутер 3','120','Роутер до 150 Мбит.с','9'),
-('Модем 2','100','Модем с доступом в интернет со скоростью 200 Мбит.с','7');
-
-INSERT subscriber
+('Модем 2','100','Модем с доступом в интернет со скоростью 200 Мбит-с','7');
+INSERT INTO subscriber (ACCOUNT_NUMBER, FIRST_NAME, SECOND_NAME, BIRTHDAY, CITY, ADRESS)
 VALUES
-('676242327492715190','Kelsi','Edkins','Thomasina','2005-01-24','Montes Claros','Огарева 1'),
-('58935262732921774','Alisa','McKelvie','Kaleb','1983-03-3','Korisós','Рабоче-Крестьянская 3'),
-('201861817040647','Doreen','Bernardt','Aristotle','1989-12-26','Lokorae','Елецкая 7'),
-('4903715824250743','Merrel','Roller','Nixie','1997-05-25','Montes Claros','Санаторная 25б'),
-('5100143843440344','Camilla','Tottle','Sande','1997-03-24','Korisós','Университетский 10'),
-('501854592351462254','Ardath','Benne','Bryna','2002-05-20','Yezhi','Удмуртский 13'),
-('4917126980998345','Devina','Dalrymple','Bobbe','2000-04-29','Yamaguchi-shi','Кирова 5'),
-('3557917304860071','Fanechka','Lampard','Ben','1997-06-14','Shakhtars’k','Габышева 136'),
-('560221856568957956','Ruthe','Haversum','Jeffie','1987-10-26','Montes Claros','Арчединская 67'),
-('3553640471040764','Darby','Audas','Donny','1984-06-10','Korisós','Суворова 43');
-
-INSERT subscriber_tarrif
+('676242327492715190','Kelsi','Edkins','Thomasina','24-01-2005','Montes Claros','Огарева 1'),
+('58935262732921774','Alisa','McKelvie','Kaleb','03-03-1983','Korisós','Рабоче-Крестьянская 3'),
+('201861817040647','Doreen','Bernardt','Aristotle','26-12-1989','Lokorae','Елецкая 7'),
+('4903715824250743','Merrel','Roller','Nixie','25-05-1997','Carapo','Санаторная 25б'),
+('5100143843440344','Camilla','Tottle','Sande','24-03-1997','Āq Qāyeh','Университетский 10'),
+('501854592351462254','Ardath','Benne','Bryna','20-05-2002','Yezhi','Удмуртский 13'),
+('4917126980998345','Devina','Dalrymple','Bobbe','29-04-2000','Yamaguchi-shi','Кирова 5'),
+('3557917304860071','Fanechka','Lampard','Ben','14-06-1997','Shakhtars’k','Габышева 136'),
+('560221856568957956','Ruthe','Haversum','Jeffie','26-10-1987','Maumere','Арчединская 67'),
+('3553640471040764','Darby','Audas','Donny','10-06-1984','Putatbasiun','Суворова 43');
+INSERT INTO subscriber_tarrif (TARRIF, SUBSCRIBER, ACTIVE)
 VALUES
 ('5','6','1'),
 ('3','7','1'),
@@ -184,29 +178,27 @@ VALUES
 ('10','9','1'),
 ('2','10','1'),
 ('5','3','0');
-
-INSERT subscriber_services
+INSERT INTO subscriber_services (SERVICE, SUBSCRIBER, DATE_ACTIVE_FROM, DATE_ACTIVE_TO)
 VALUES
-('2','2','25.9.2021','27.2.2022'),
-('3','4','3.10.2021','17.11.2021'),
-('5','5','23.9.2021','26.10.2021'),
-('6','2','20.9.2021','12.1.2022'),
-('2','6','13.9.2021','1.8.2022'),
-('9','6','31.8.2021','16.11.2021'),
-('5','7','22.9.2021','1.11.2021'),
-('1','8','11.9.2021','28.3.2022'),
-('10','9','2.10.2021','14.5.2022'),
-('9','10','26.9.2021','27.12.2021');
-
-INSERT subscriber_devices
+('2','2','25-9-2021','27-2-2022'),
+('3','4','3-10-2021','17-11-2021'),
+('5','5','23-9-2021','26-10-2021'),
+('6','2','20-9-2021','12-1-2022'),
+('2','6','13-9-2021','1-8-2022'),
+('9','6','31-8-2021','16-11-2021'),
+('5','7','22-9-2021','1-11-2021'),
+('1','8','11-9-2021','28-3-2022'),
+('10','9','2-10-2021','14-5-2022'),
+('9','10','26-9-2021','27-12-2021'
+INSERT INTO subscriber_devices (DEVICE, SUBSCRIBER, DATE_ACTIVE_FROM, DATE_ACTIVE_TO)
 VALUES
-('4','3','25.9.2021','27.2.2022'),
-('3','2','3.10.2021','17.11.2021'),
-('1','6','23.9.2021','26.10.2021'),
-('4','5','22.9.2021','1.11.2021'),
-('5','9','31.8.2021','16.11.2021'),
-('7','10','23.9.2021','26.10.2021'),
-('1','1','2.10.2021','14.5.2022'),
-('2','3','2.10.2021','14.5.2022'),
-('10','2','26.9.2021','27.12.2021'),
-('7','5','3.10.2021','17.11.2021')
+('4','3','25-9-2021','27-2-2022'),
+('3','2','3-10-2021','17-11-2021'),
+('1','6','23-9-2021','26-10-2021'),
+('4','5','22-9-2021','1-11-2021'),
+('5','9','31-8-2021','16-11-2021'),
+('7','10','23-9-2021','26-10-2021'),
+('1','1','2-10-2021','14-5-2022'),
+('2','3','2-10-2021','14-5-2022'),
+('10','2','26-9-2021','27-12-2021'),
+('7','5','3-10-2021','17-112021') 
