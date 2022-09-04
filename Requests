@@ -17,30 +17,20 @@ JOIN tarrif_plan t ON st.TARRIF = t.ID
 GROUP BY st.TARRIF, t.NAME, t.CONNECTION_SPEED, t.PRICE_PER_MONTH
 ORDER BY count_subscribers desc
 
-SELECT sub.ID, sub.FIRST_NAME as subscriber_name, sub.LAST_NAME as subscriber_last_name, sub.SECOND_NAME as subscriber_second_name,
-t.PRICE_PER_MONTH + s.PRICE_PER_MONTH + d.PRICE_PER_MONTH as sum_spent FROM subscriber sub
-LEFT JOIN subscriber_tarrif st ON sub.ID = st.SUBSCRIBER
-LEFT JOIN subscriber_devices sd ON sub.ID = sd.SUBSCRIBER
-LEFT JOIN subscriber_services ss ON sub.ID = ss.SUBSCRIBER
-JOIN tarrif_plan t ON st.TARRIF = t.ID
-JOIN devices_types d ON sd.DEVICE = d.ID
-JOIN services s ON ss.SERVICE = s.ID
-WHERE sd.DATE_ACTIVE_FROM <= '2021-11-16' and sd.DATE_ACTIVE_TO >= '2021-11-16'
-and ss.DATE_ACTIVE_FROM <= '2021-11-16' and ss.DATE_ACTIVE_TO >= '2021-11-16'
-and st.ACTIVE = 1
-GROUP BY sub.ID, sub.FIRST_NAME, sub.LAST_NAME, sub.SECOND_NAME, t.PRICE_PER_MONTH, d.PRICE_PER_MONTH, s.PRICE_PER_MONTH
-
-SELECT t.PRICE_PER_MONTH + s.PRICE_PER_MONTH + d.PRICE_PER_MONTH as sum_spent FROM provider p
-JOIN tarrif_plan t ON t.PROVIDER = p.ID
-JOIN devices_types d ON d.PROVIDER = p.ID
-JOIN services s ON s.PROVIDER = p.ID
-LEFT JOIN subscriber_tarrif st ON t.ID = st.TARRIF
-LEFT JOIN subscriber_devices sd ON d.ID = sd.DEVICE
-LEFT JOIN subscriber_services ss ON s.ID = ss.SUBSCRIBER
-WHERE sd.DATE_ACTIVE_FROM <= '2021-11-16' and sd.DATE_ACTIVE_TO >= '2021-11-16'
-and ss.DATE_ACTIVE_FROM <= '2021-11-16' and ss.DATE_ACTIVE_TO >= '2021-11-16'
-and st.ACTIVE = 1
-GROUP BY st.SUBSCRIBER, sd.SUBSCRIBER, ss.SUBSCRIBER, t.PRICE_PER_MONTH, d.PRICE_PER_MONTH, s.PRICE_PER_MONTH
+SELECT sub.*, t.PRICE_PER_MONTH FROM subscriber_tarrif AS st
+    JOIN tarrif_plan AS t ON t.ID = st.TARRIF
+    JOIN subscriber AS sub  ON sub.ID = st.SUBSCRIBER
+    WHERE ACTIVE = 1;
+     
+SELECT sub.*, d.PRICE_PER_MONTH FROM subscriber_devices AS sd
+    JOIN devices_types AS d ON d.ID = sd.DEVICE
+    JOIN subscriber AS sub  ON sub.ID = sd.SUBSCRIBER
+    WHERE DATE_ACTIVE_FROM <= '2021-11-16' AND DATE_ACTIVE_TO >= '2021-11-16';
+        
+SELECT sub.*, s.PRICE_PER_MONTH FROM subscriber_services AS ss
+    JOIN services AS s ON s.ID = ss.SERVICE
+    JOIN subscriber AS sub  ON sub.ID = ss.SUBSCRIBER
+    WHERE DATE_ACTIVE_FROM <= '2021-11-16'AND DATE_ACTIVE_TO >= '2021-11-16';
 
 SELECT sub.FIRST_NAME, sub.LAST_NAME, sub.SECOND_NAME, MAX(t.CONNECTION_SPEED) AS MAX_CONNECTION_SPEED FROM subscriber_tarrif st
 LEFT JOIN tarrif_plan t ON st.TARRIF = t.ID
