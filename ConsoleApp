@@ -122,57 +122,133 @@ namespace HelloApp
                     }
                     Console.Read();
                     break;
-                /* case "4":
-                     string sqlExpression3 = $"(SELECT sub.*, (SELECT t.PRICE_PER_MONTH FROM subscriber_tarrif AS st\r\n        JOIN tarrif_plan AS t ON t.ID = st.TARRIF\r\n        WHERE ACTIVE = 1 AND SUBSCRIBER = sub.ID) AS SUM_SPENT_tar FROM subscriber AS sub;";
-                     string sqlExpression4 = $"(SELECT sub.*, (SELECT d.PRICE_PER_MONTH FROM subscriber_devices AS sd\r\n        JOIN devices_types AS d ON d.ID = sd.DEVICE\r\n        WHERE SUBSCRIBER = sub.ID AND\r\n        DATE_ACTIVE_FROM <= '2021-11-16'\r\n        AND DATE_ACTIVE_TO >= '2021-11-16') AS SUM_SPENT_dev FROM subscriber AS sub;";
-                     string sqlExpression5 = $"(SELECT sub.*, (SELECT s.PRICE_PER_MONTH FROM subscriber_services AS ss\r\n         JOIN services AS s ON s.ID = ss.SERVICE\r\n         WHERE SUBSCRIBER = sub.ID AND\r\n         DATE_ACTIVE_FROM <= '2021-11-16'AND \r\n         DATE_ACTIVE_TO >= '2021-11-16') AS SUM_SPENT_ser FROM subscriber AS sub;";
-                     string price_per_month = "SUM_SPENT_tar" + "SUM_SPENT_dev" + "SUM_SPENT_ser";
-                     using (var connection = new SqliteConnection("Data Source=C:\\Users\\priva\\Desktop\\Providers.db; Mode=ReadWrite; Foreign Keys=True; "))
-                     {
-                         connection.Open();
+                   case "4":
+                    Dictionary<int, string[]> listSubscribers = new Dictionary<int, string[]>();
+                    string sqlExpression3 = $"SELECT sub.*, t.PRICE_PER_MONTH FROM subscriber_tarrif AS st\r\n    JOIN tarrif_plan AS t ON t.ID = st.TARRIF\r\n    JOIN subscriber AS sub  ON sub.ID = st.SUBSCRIBER\r\n    WHERE ACTIVE = 1;SELECT sub.*, t.PRICE_PER_MONTH FROM subscriber_tarrif AS st\r\n    JOIN tarrif_plan AS t ON t.ID = st.TARRIF\r\n   left JOIN subscriber AS sub  ON sub.ID = st.SUBSCRIBER\r\n    WHERE ACTIVE = 1;";
+                    using (var connection = new SqliteConnection("Data Source=C:\\Users\\priva\\Desktop\\Providers.db; Mode=ReadWrite; Foreign Keys=True; "))
+                    {
 
-                         SqliteCommand command = new SqliteCommand(sqlExpression3, connection);
-                         SqliteCommand command1 = new SqliteCommand(sqlExpression4, connection);
-                         SqliteCommand command2 = new SqliteCommand(sqlExpression5, connection);
-                         using (SqliteDataReader reader = command.ExecuteReader())
-                         using (SqliteDataReader reader1 = command1.ExecuteReader())
-                         using (SqliteDataReader reader2 = command2.ExecuteReader())
-                         {
-                             if (reader.HasRows)
-                             {
-                                 if (reader1.HasRows)
-                                 {
-                                     if (reader2.HasRows)
-                                     {
-                                         Console.WriteLine("\n|T.Name; | Connection speed; | Tarif_Price; | Count; |\n");
-                                         while (reader.Read())
-                                         {
-                                             int price2 = Convert.ToInt32(reader.GetValue(7));
-                                             while (reader1.Read())
-                                             {
-                                                 int price1 = Convert.ToInt32(reader.GetValue(7));
-                                                 while (reader2.Read())
-                                                 {
-                                                     var ID = reader.GetValue(0);
-                                                     var First_Name = reader.GetValue(1);
-                                                     var Last_Name = reader.GetValue(2);
-                                                     var Second_Name = reader.GetValue(3);
-                                                     var Birthday = reader.GetValue(4);
-                                                     var City = reader.GetValue(5);
-                                                     var Adress = reader.GetValue(6);
-                                                     int price = Convert.ToInt32(reader.GetValue(7));
-                                                     Console.WriteLine($"|{ID}; \t| {First_Name}; \t| {Last_Name}; \t| {Second_Name}; \t| {Birthday}; \t| {City}; \t\t|\t {Adress}; \t|\t {price + price1 + price2} \t|");
-                                                 }
-                                             }
-                                         }
-                                     }
-                                 }
-                             }
-                         }
-                     }
-                     Console.Read();
+                        connection.Open();
+
+                        SqliteCommand command = new SqliteCommand(sqlExpression3, connection);
+                        using (SqliteDataReader reader = command.ExecuteReader())
+                        {
+                            if (reader.HasRows)
+                            {
+                                while (reader.Read())
+                                {
+
+                                    string[] subscriber = new string[8];
+                                    int id = Convert.ToInt32(reader.GetValue(0));
+                                    subscriber[0] = Convert.ToString(reader.GetValue(1));
+                                    subscriber[1] = Convert.ToString(reader.GetValue(2));
+                                    subscriber[2] = Convert.ToString(reader.GetValue(3));
+                                    subscriber[3] = Convert.ToString(reader.GetValue(4));
+                                    subscriber[4] = Convert.ToString(reader.GetValue(5));
+                                    subscriber[5] = Convert.ToString(reader.GetValue(6));
+                                    subscriber[6] = Convert.ToString(reader.GetValue(7));
+                                    subscriber[7] = Convert.ToString(reader.GetValue(8));
+
+                                    if (listSubscribers.ContainsKey(id))
+                                    {
+                                        double price = Convert.ToDouble(listSubscribers[id][7]);
+                                        price += Convert.ToDouble(subscriber[7]);
+                                        listSubscribers[id][7] = Convert.ToString(price);
+                                    }
+                                    else
+                                    {
+                                        listSubscribers.Add(id, subscriber);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    string sqlExpression4 = $"SELECT sub.*, d.PRICE_PER_MONTH FROM subscriber_devices AS sd\r\n    JOIN devices_types AS d ON d.ID = sd.DEVICE\r\n    JOIN subscriber AS sub  ON sub.ID = sd.SUBSCRIBER\r\n    WHERE DATE_ACTIVE_FROM <= '2021-11-16' AND DATE_ACTIVE_TO >= '2021-11-16';SELECT sub.*, d.PRICE_PER_MONTH FROM subscriber_devices AS sd\r\n    JOIN devices_types AS d ON d.ID = sd.DEVICE\r\n    JOIN subscriber AS sub  ON sub.ID = sd.SUBSCRIBER\r\n    WHERE DATE_ACTIVE_FROM <= '2021-11-16' AND DATE_ACTIVE_TO >= '2021-11-16';";
+                    using (var connection = new SqliteConnection("Data Source=C:\\Users\\priva\\Desktop\\Providers.db; Mode=ReadWrite; Foreign Keys=True; "))
+                    {
+
+                        connection.Open();
+
+                        SqliteCommand command = new SqliteCommand(sqlExpression4, connection);
+                        using (SqliteDataReader reader = command.ExecuteReader())
+                        {
+                            if (reader.HasRows)
+                            {
+                                while (reader.Read())
+                                {
+
+                                    string[] subscriber = new string[8];
+                                    int id = Convert.ToInt32(reader.GetValue(0));
+                                    subscriber[0] = Convert.ToString(reader.GetValue(1));
+                                    subscriber[1] = Convert.ToString(reader.GetValue(2));
+                                    subscriber[2] = Convert.ToString(reader.GetValue(3));
+                                    subscriber[3] = Convert.ToString(reader.GetValue(4));
+                                    subscriber[4] = Convert.ToString(reader.GetValue(5));
+                                    subscriber[5] = Convert.ToString(reader.GetValue(6));
+                                    subscriber[6] = Convert.ToString(reader.GetValue(7));
+                                    subscriber[7] = Convert.ToString(reader.GetValue(8));
+
+                                    if (listSubscribers.ContainsKey(id))
+                                    {
+                                        double price = Convert.ToDouble(listSubscribers[id][7]);
+                                        price += Convert.ToDouble(subscriber[7]);
+                                        listSubscribers[id][7] = Convert.ToString(price);
+                                    }
+                                    else
+                                    {
+                                        listSubscribers.Add(id, subscriber);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    string sqlExpression5 = $"SELECT sub.*, s.PRICE_PER_MONTH FROM subscriber_services AS ss\r\n    JOIN services AS s ON s.ID = ss.SERVICE\r\n    JOIN subscriber AS sub  ON sub.ID = ss.SUBSCRIBER\r\n    WHERE DATE_ACTIVE_FROM <= '2021-11-16'AND DATE_ACTIVE_TO >= '2021-11-16';";
+                    using (var connection = new SqliteConnection("Data Source=C:\\Users\\priva\\Desktop\\Providers.db; Mode=ReadWrite; Foreign Keys=True; "))
+                    {
+
+                        connection.Open();
+
+                        SqliteCommand command = new SqliteCommand(sqlExpression5, connection);
+                        using (SqliteDataReader reader = command.ExecuteReader())
+                        {
+                            if (reader.HasRows)
+                            {
+                                while (reader.Read())
+                                {
+
+                                    string[] subscriber = new string[8];
+                                    int id = Convert.ToInt32(reader.GetValue(0));
+                                    subscriber[0] = Convert.ToString(reader.GetValue(1));
+                                    subscriber[1] = Convert.ToString(reader.GetValue(2));
+                                    subscriber[2] = Convert.ToString(reader.GetValue(3));
+                                    subscriber[3] = Convert.ToString(reader.GetValue(4));
+                                    subscriber[4] = Convert.ToString(reader.GetValue(5));
+                                    subscriber[5] = Convert.ToString(reader.GetValue(6));
+                                    subscriber[6] = Convert.ToString(reader.GetValue(7));
+                                    subscriber[7] = Convert.ToString(reader.GetValue(8));
+
+                                    if (listSubscribers.ContainsKey(id))
+                                    {
+                                        double price = Convert.ToDouble(listSubscribers[id][7]);
+                                        price += Convert.ToDouble(subscriber[7]);
+                                        listSubscribers[id][7] = Convert.ToString(price);
+                                    }
+                                    else
+                                    {
+                                        listSubscribers.Add(id, subscriber);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    Console.WriteLine("\n| ID | AccountNumber | First_Name | Last_Name | Second_Name | Birthday | City | Adress | Sum | \n");
+                   foreach (var subscriber in listSubscribers)
+                    {
+                        string[] sub = subscriber.Value;
+                        Console.WriteLine ($"| {subscriber.Key} | {sub[0]} | {sub[1]} | {sub[2]} | {sub[3]} | {sub[4]} | {sub[5]} | {sub[6]} | {sub[7]} |\n");
+                    }
+                    Console.Read();
                      break;
-                */
                 case "5":
                     {
                         Console.WriteLine("Введите Город \n");
